@@ -20,5 +20,5 @@ app.get("/login", (c) => {
 })
 
 app.get("/callback", (c) => {
-    return 'wagwan';
+    return 'wagwan mi gi';
 })
