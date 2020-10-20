@@ -1,58 +1,84 @@
 //@ts-ignore
-import { Application } from 'https://deno.land/x/abc@v1.0.3/mod.ts';
-import urlcat from 'https://deno.land/x/urlcat@v2.0.4/src/index.ts';
 import "https://deno.land/x/dotenv/load.ts";
 import { encode } from "https://deno.land/std@0.74.0/encoding/base64.ts";
+import { Application } from "https://deno.land/x/abc@v1.0.3/mod.ts";
+import urlcat from "https://deno.land/x/urlcat@v2.0.4/src/index.ts";
 
-const redirect_uri = 'http://localhost:8080/callback';
+const redirect_uri = "http://localhost:8080/callback";
+const cliID = Deno.env.get("cli_id");
+const cliSecret = Deno.env.get("cli_secret");
 
 const app = new Application();
 
-app
-  .file("/", "public/index.html")
-  .start({ port: 8080 })
+var generateRandomString = function (length: number) {
+  var text = "";
+  var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+  for (var i = 0; i < length; i++) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+  return text;
+};
+
+app.file("/", "public/index.html").start({ port: 8080 });
 
 app.get("/login", (res) => {
-  res.redirect(urlcat('https://accounts.spotify.com/authorize', {
-    client_id: Deno.env.get('cli_id'),
-    response_type: 'code',
-    redirect_uri: redirect_uri
+  var state = generateRandomString(16);
+  let scope = "user-read-private user-read-email";
+
+  res.redirect(urlcat("https://accounts.spotify.com/authorize", {
+    client_id: cliID,
+    response_type: "code",
+    redirect_uri: redirect_uri,
+    state: state,
+    scope: scope
   }));
-})
+});
 
 app.get("/callback", async (res) => {
-
   // Check for permission denied - '?error=access-denied'
   //      Just check for ?error in response string
 
-  // Split response at '?' and strip code= or state=
-  var code = res.request.url.split('code=')[1] || null; 
-  // var state = res.request.state || null;
+  var code: string = res.url.searchParams.get('code') || '';
+  var state: string = res.url.searchParams.get('state') || '';
 
-  let options = {
-    grant_type: 'authorization_code',
-    code: code,
-    redirect_uri: redirect_uri
-  };
+  console.log(`code: ${code}`);
+  console.log(`state: ${state}`);
 
-  const response = await fetch('https://accounts.spotify.com/api/token', {
+  const tokenOptions: URLSearchParams = new URLSearchParams ({
+    grant_type: "authorization_code", 
+    code: code, 
+    redirect_uri: redirect_uri 
+  });
+  
+  const response = await fetch("https://accounts.spotify.com/api/token", {
     method: 'POST',
     headers: {
-      'Content-Type': 'text/json',
-      'Authorization': 'Basic' + encode(Deno.env.get('cli_id') + ':' + Deno.env.get('cli_secret'))
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Authorization: "Basic " + encode(cliID + ":" + cliSecret),
     },
-    body: JSON.stringify(options),
+    body: tokenOptions
   });
-console.log(response);
-console.log('headers: ' + response.headers);
-  const data = await response.headers.get('access_token');
-  console.log('data: ' + data);
-  // console.log(response.toString);
 
-  const name = await fetch('https://api.spotify.com/v1/me', {
+  let result:any = await response.json();
+
+  let access_token = result.access_token;
+  let refresh_token = result.refresh_token;
+
+  console.log(`token: ${result.access_token}`);
+
+  const fetchDeets = await fetch("https://api.spotify.com/v1/me", {
     headers: {
-      'Authorization': 'Bearer ' + 'token'
+      Authorization: result.token_type + ' ' + access_token
     }
-  })
+  })  
 
-})
+  const deets:any = await fetchDeets.json();
+  return 'hi ' + deets.display_name;
+
+  // Send tokens back to browser
+  res.redirect(urlcat('/', {
+    access_token: access_token,
+    refresh_token: refresh_token
+  }));
+});
