@@ -7,7 +7,13 @@ The mobile app for Spotify is lackluster in indexing songs by genre, bpm and sim
 
 ## Aim
 
-So the aim of this project is to provide all the functions that I feel are lacking in the Spotify mobile app. Will also give me some opportunity to see what you freaks listen to - hopefully.
+To enforce the social area of music that is missing in modern mobile based spotify. Will also give me some opportunity to see what you freaks listen to - hopefully.
+
+# Running
+
+App : Navigate into `yewapp` and run `trunk serve`. You may need to install trunk first with: `cargo install trunk`.
+
+The deno webserver will most likely be deprecated.
 
 ## Todo:
 
