@@ -6,3 +6,10 @@ pub fn app() -> Html {
     html! {
     }
 }
+mod components;
+mod pages;
+mod router;
+
+mod components;
+mod pages;
+mod router;
