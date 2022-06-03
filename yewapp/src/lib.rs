@@ -31,6 +31,18 @@ pub fn app() -> Html {
         .map(|state| state.hash.as_ref())
         .unwrap_or_default();
 
+    if hash.is_none() {
+        store.dispatch().reduce(|state| {
+            log! {"Setting hash"};
+            state.hash = Some(
+                rand::thread_rng()
+                    .sample_iter(&Alphanumeric)
+                    .take(16)
+                    .map(char::from)
+                    .collect::<String>(),
+            )
+        });
+    };
 
     html! {
         <BrowserRouter>
