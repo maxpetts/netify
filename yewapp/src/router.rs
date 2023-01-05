@@ -1,5 +1,5 @@
-use crate::pages::{home::Home, profile::Profile};
-use gloo::console::log;
+use crate::pages::{callback::Callback, home::Home, profile::Profile};
+use gloo_console::log;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
@@ -16,16 +16,14 @@ pub enum Route {
     Home,
 }
 
-pub fn switch(routes: &Route) -> Html {
-    // let user_context = use_context::<User>().unwrap();
-
+pub fn switch(routes: Route) -> Html {
     match routes {
         Route::Home => html! { <Home /> },
         Route::Profile => {
             html! { <Profile/> }
         }
         Route::Callback => {
-            html! {"aaa"}
+            html! { <Callback /> }
         }
         Route::NotFound => html! {{"404"}},
     }

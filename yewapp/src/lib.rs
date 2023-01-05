@@ -2,52 +2,69 @@ mod components;
 mod pages;
 mod router;
 
-use gloo::console::log;
+use std::{borrow::BorrowMut, process::exit, time::Duration};
+
+use chrono::{DateTime, Utc};
+use gloo_console::log;
 use rand::{distributions::Alphanumeric, Rng};
 use router::{switch, Route};
-use yew::prelude::*;
+use web_sys::console::log;
+use yew::{functional::*, prelude::*};
 use yew_router::prelude::*;
 use yewdux::prelude::*;
-use yewdux_functional::use_store;
 
+use crate::components::nav::Nav;
 use serde::{Deserialize, Serialize};
 
-#[derive(Default, Clone, Deserialize, Serialize)]
-struct State {
-    hash: Option<String>,
+#[derive(Default, Clone, PartialEq, Eq, Deserialize, Serialize, Store, Debug)]
+#[store(storage = "session")]
+pub struct State {
+    hash: String,
+    client_id: String,
+    logged: bool,
+    auth_token: Option<String>,
+    access_token: Option<String>,
+    access_token_recieved: Option<Duration>,
+    access_token_expires: Option<DateTime<Utc>>,
+    refresh_token: Option<String>,
 }
 
-impl Persistent for State {
-    fn area() -> Area {
-        Area::Session
+pub fn serialize_dt<S>(dt: &Option<DateTime<Utc>>, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: serde::Serializer,
+{
+    match dt {
+        Some(dt) => chrono::serde::ts_seconds::serialize(dt, serializer),
+        None => serializer.serialize_none(),
+        _ => unreachable!(),
     }
+}
+
+pub fn create_hash() -> String {
+    log! {"Creating hash"};
+
+    rand::thread_rng()
+        .sample_iter(&Alphanumeric)
+        .take(16)
+        .map(char::from)
+        .collect::<String>()
 }
 
 #[function_component(App)]
 pub fn app() -> Html {
-    let store = use_store::<PersistentStore<State>>();
-    let hash = store
-        .state()
-        .map(|state| state.hash.as_ref())
-        .unwrap_or_default();
+    let (state, dispatch) = use_store::<State>();
 
-    if hash.is_none() {
-        store.dispatch().reduce(|state| {
-            log! {"Setting hash"};
-            state.hash = Some(
-                rand::thread_rng()
-                    .sample_iter(&Alphanumeric)
-                    .take(16)
-                    .map(char::from)
-                    .collect::<String>(),
-            )
-        });
-    };
+    dispatch.reduce_mut(|state| {
+        state.client_id = "dcd5f7be4a1f450a8c23297b83a09cd3".to_string();
+        if state.hash.is_empty() {
+            state.hash = create_hash()
+        };
+    });
 
     html! {
         <BrowserRouter>
-            <Switch<Route> render={Switch::render(switch)} />
-            <p>{format!{"{:#?}", hash}}</p>
+        <Nav/>
+            <Switch<Route> render={switch} />
         </BrowserRouter>
     }
 }

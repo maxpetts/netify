@@ -60,7 +60,7 @@ impl Component for UserComponent {
                 log!("iserstate: ", &state.state.clone().unwrap());
 
                 let client_id = "dcd5f7be4a1f450a8c23297b83a09cd3";
-                let client_secret = "d3d5eb4d4c9a4615b44d107c9cb83918";
+                let client_secret = "wowoow";
                 let redirect_uri = "http://localhost:8080/callback";
                 let scope = "user-read-private user-read-email";
 

@@ -17,3 +17,5 @@ Cargo.lock
 
 # Used by trunk
 dist/
+
+.DS_Store
