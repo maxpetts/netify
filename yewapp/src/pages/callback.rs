@@ -35,7 +35,7 @@ pub fn callback() -> Html {
     let (state, dispatch) = use_store::<State>();
     let error: UseStateHandle<Option<&str>> = use_state(|| None);
 
-    if state.as_ref().hash.is_empty() || state.as_ref().auth_token.is_none() {
+    if state.as_ref().hash.is_empty() && state.as_ref().auth_token.is_none() {
         let url = Url::new(&document().url().unwrap()).unwrap(); // do some better handling please
         let url_params = web_sys::UrlSearchParams::new_with_str(&url.search());
 
