@@ -1,16 +1,22 @@
-use std::string;
+use std::{string, sync::Arc};
 
 use axum::{
     body,
-    extract::FromRequest,
+    extract::{FromRequest, Json, State},
     http::{Method, StatusCode},
     response::{IntoResponse, Response},
     routing::{get, post},
-    Json, Router,
+    Router,
 };
 use axum_macros::debug_handler;
+use backend::create_hash;
 use serde::{Deserialize, Serialize};
 use tower_http::cors::{Any, CorsLayer, Origin};
+
+struct AppState {
+    client_id: String,
+    client_secret: String,
+}
 
 #[derive(Deserialize, Serialize, Clone)]
 struct AccessTokenResponse {
@@ -30,12 +36,22 @@ struct AccessTokenError {
 #[tokio::main]
 async fn main() {
     dotenv::dotenv().expect("Couldn't load .env file");
-    let app = Router::new().route("/", post(request_access_token)).layer(
-        CorsLayer::new()
-            .allow_origin(Any)
-            .allow_methods(Any)
-            .allow_headers(Any),
-    );
+
+    let shared_state: Arc<AppState> = Arc::new(AppState {
+        client_id: std::env::var("CLIENT_ID").expect("Unable to load client id from env"),
+        client_secret: std::env::var("CLIENT_SECRET")
+            .expect("Unable to load client secret from env"),
+    });
+
+    let app = Router::new()
+        .route("/", post(request_access_token))
+        .layer(
+            CorsLayer::new()
+                .allow_origin(Any)
+                .allow_methods(Any)
+                .allow_headers(Any),
+        )
+        .with_state(shared_state);
 
     axum::Server::bind(&"0.0.0.0:3001".parse().unwrap())
         .serve(app.into_make_service())
@@ -47,10 +63,17 @@ async fn not_auth() -> impl IntoResponse {
     "not auth"
 }
 
-async fn request_user_auth() -> impl IntoResponse {
-    "Get user auth"
+async fn request_user_auth(State(state): State<AppState>) -> impl IntoResponse {
+    let URL: String = format! {
+        "https://accounts.spotify.com/authorize?client_id={}&response_type=code&redirect_uri={}&state={}&scope={}",
+        state.client_id,
+        "http://localhost:8080/callback",
+        create_hash(),
+        "user-read-private user-read-email"
+    };
+    let req_builder = reqwest::Client::new().get(URL);
 }
-#[debug_handler]
+
 async fn request_access_token(Json(payload): Json<AccessTokenRequest>) -> impl IntoResponse {
     let access_token = if payload.auth_token.chars().count() > 0 {
         payload.auth_token
@@ -74,7 +97,7 @@ async fn request_access_token(Json(payload): Json<AccessTokenRequest>) -> impl I
             "Authorization",
             format!(
                 "Basic {}",
-                base64::encode(format! {"{}:{}", client_id,client_secret}),
+                base64::encode(format! {"{}:{}", client_id, client_secret}),
             ),
         );
 
@@ -91,12 +114,7 @@ async fn request_access_token(Json(payload): Json<AccessTokenRequest>) -> impl I
         return Ok((StatusCode::OK, Json(res_json)));
     }
 
-    Err((
-        StatusCode::INTERNAL_SERVER_ERROR,
-        // res.json::<AccessTokenError>()
-        res.text().await.expect("err parsing the err!!"),
-    ))
-    .into_response();
+    return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
 }
 
 #[derive(Deserialize, Debug)]
