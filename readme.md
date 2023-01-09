@@ -1,6 +1,8 @@
 # Netify 🎧
 An improved spotify client, written in Deno 🦖.
 
+[![wakatime](https://wakatime.com/badge/github/maxpetts/netify.svg)](https://wakatime.com/badge/github/maxpetts/netify)
+
 ## Problem Statement
 
 The mobile app for Spotify is lackluster in indexing songs by genre, bpm and similiar songs. Losing your old discover weekly is always a pain; along with that one song on a random playlist you listened to 2 weeks ago.
