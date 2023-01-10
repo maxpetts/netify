@@ -1,4 +1,5 @@
 # Netify 🎧
+
 An improved spotify client, written in Deno 🦖.
 
 ## Problem Statement
@@ -24,7 +25,9 @@ The deno webserver will most likely be deprecated.
 - [ ] Use access code to get user details.
 - [ ] Create database to store details.
 - [ ] Create auto requesting refresh token upon token expiry.
-- [ ] Decide on authorization [scopes](https://developer.spotify.com/documentation/general/guides/scopes/) - *may be benefitial to do this as functionality develops* 
+- [ ] Decide on authorization [scopes](https://developer.spotify.com/documentation/general/guides/scopes/) - _may be benefitial to do this as functionality develops_
 - [ ] List the users music library.
 - [ ] Add filter functionality to the library.
 - [ ] Download Discover Weekly, weekly.
+
+- [ ] Seperate hash for FE -> BE & BE -> Spotify
