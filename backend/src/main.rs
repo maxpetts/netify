@@ -2,7 +2,7 @@ use std::{string, sync::Arc};
 
 use axum::{
     body,
-    extract::{FromRequest, Json, State},
+    extract::{FromRequest, Json, Query, State},
     http::{Method, StatusCode},
     response::{IntoResponse, Response},
     routing::{get, post},
@@ -16,6 +16,11 @@ use tower_http::cors::{Any, CorsLayer, Origin};
 struct AppState {
     client_id: String,
     client_secret: String,
+}
+
+#[derive(Deserialize, Debug)]
+struct AccessTokenRequest {
+    auth_token: String,
 }
 
 #[derive(Deserialize, Serialize, Clone)]
@@ -44,7 +49,7 @@ async fn main() {
     });
 
     let app = Router::new()
-        .route("/", post(request_access_token))
+        .route("/getToken", get(request_access_token))
         .layer(
             CorsLayer::new()
                 .allow_origin(Any)
@@ -63,7 +68,7 @@ async fn not_auth() -> impl IntoResponse {
     "not auth"
 }
 
-async fn request_user_auth(State(state): State<AppState>) -> impl IntoResponse {
+async fn request_user_auth(body: String, State(state): State<AppState>) -> impl IntoResponse {
     let URL: String = format! {
         "https://accounts.spotify.com/authorize?client_id={}&response_type=code&redirect_uri={}&state={}&scope={}",
         state.client_id,
@@ -74,9 +79,10 @@ async fn request_user_auth(State(state): State<AppState>) -> impl IntoResponse {
     let req_builder = reqwest::Client::new().get(URL);
 }
 
-async fn request_access_token(Json(payload): Json<AccessTokenRequest>) -> impl IntoResponse {
-    let access_token = if payload.auth_token.chars().count() > 0 {
-        payload.auth_token
+async fn request_access_token(Query(params): Query<AccessTokenRequest>) -> impl IntoResponse {
+    println!("get token");
+    let access_token = if params.auth_token.chars().count() > 0 {
+        params.auth_token
     } else {
         return Err(StatusCode::UNPROCESSABLE_ENTITY.into_response());
     };
@@ -112,12 +118,8 @@ async fn request_access_token(Json(payload): Json<AccessTokenRequest>) -> impl I
         // println! {"{:?}", res.text().await};
         // Ok(Json(res_json).into_response())
         return Ok((StatusCode::OK, Json(res_json)));
+    } else {
+        println!("{:?}", res.text().await);
+        return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
     }
-
-    return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
-}
-
-#[derive(Deserialize, Debug)]
-struct AccessTokenRequest {
-    auth_token: String,
 }
