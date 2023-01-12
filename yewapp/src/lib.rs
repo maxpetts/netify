@@ -17,14 +17,13 @@ use crate::components::nav::Nav;
 use serde::{Deserialize, Serialize};
 
 #[derive(Default, Clone, PartialEq, Eq, Deserialize, Serialize, Store, Debug)]
-#[store(storage = "session")]
 pub struct State {
     hash: String,
     client_id: String,
     logged: bool,
     auth_token: Option<String>,
     access_token: Option<String>,
-    access_token_recieved: Option<Duration>,
+    access_token_recieved: Option<DateTime<Utc>>,
     access_token_expires: Option<DateTime<Utc>>,
     refresh_token: Option<String>,
 }
@@ -52,18 +51,18 @@ pub fn create_hash() -> String {
 
 #[function_component(App)]
 pub fn app() -> Html {
-    let (state, dispatch) = use_store::<State>();
+    let dispatch = Dispatch::<State>::new();
 
     dispatch.reduce_mut(|state| {
         state.client_id = "dcd5f7be4a1f450a8c23297b83a09cd3".to_string();
         if state.hash.is_empty() {
-            state.hash = create_hash()
+            state.hash = create_hash();
         };
     });
 
     html! {
         <BrowserRouter>
-        <Nav/>
+            <Nav/>
             <Switch<Route> render={switch} />
         </BrowserRouter>
     }
