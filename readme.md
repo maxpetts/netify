@@ -31,5 +31,6 @@ The deno webserver will most likely be deprecated.
 - [ ] List the users music library.
 - [ ] Add filter functionality to the library.
 - [ ] Download Discover Weekly, weekly.
-
 - [ ] Seperate hash for FE -> BE & BE -> Spotify
+- [ ] trpc?
+- [ ] Move token exp to BE
