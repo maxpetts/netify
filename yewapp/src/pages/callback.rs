@@ -1,143 +1,92 @@
-use std::{
-    collections::HashMap,
-    thread::{self, spawn},
-};
+use std::rc::Rc;
 
 use crate::State;
-use base64::encode;
 use gloo_console::log;
 use gloo_utils::document;
-// use reqwest::Response;
-use serde::{Deserialize, Serialize};
-use timer;
-use wasm_bindgen::prelude::*;
-use wasm_bindgen::{JsCast, JsValue};
-use wasm_bindgen_futures::spawn_local;
-use wasm_bindgen_futures::JsFuture;
-use web_sys::{Request, RequestInit, RequestMode, Response, Url};
-use yew::prelude::*;
-use yewdux::prelude::*;
-// enum Error {
-//     HASH_MISMATCH = "Hash Mismatch",
-// }
+use web_sys::Url;
+use yew::{function_component, html, Html};
+use yew_router::prelude::use_navigator;
+use yewdux::prelude::use_store;
 
-#[derive(Deserialize, Serialize, Clone, Debug)]
-struct ResponseForAccessToken {
+#[derive(serde::Serialize, serde::Deserialize)]
+struct TokenResponse {
     access_token: String,
-    token_type: String,
-    scope: String,
+    // token_type: String, // SHould be enum, Moved to backend
     expires_in: u64,
-    refresh_token: String,
+    // refresh_token: String, Moved to backend
 }
 
 #[function_component(Callback)]
 pub fn callback() -> Html {
     let (state, dispatch) = use_store::<State>();
-    let error: UseStateHandle<Option<&str>> = use_state(|| None);
+    let navigator = use_navigator().unwrap();
 
-    if state.as_ref().hash.is_empty() && state.as_ref().auth_token.is_none() {
-        let url = Url::new(&document().url().unwrap()).unwrap(); // do some better handling please
-        let url_params = web_sys::UrlSearchParams::new_with_str(&url.search());
+    let url = Url::new(&document().url().unwrap()).unwrap(); // do some better handling please
+    let url_params = web_sys::UrlSearchParams::new_with_str(&url.search());
+    let mut error = url_params.as_ref().unwrap().get("error");
 
-        if let Ok(UrlSearchParams) = &url_params {
-            match (
-                url_params.as_ref().unwrap().get("code"),
-                url_params.as_ref().unwrap().get("state"),
-            ) {
-                (Some(code), Some(hash)) => {
-                    dispatch.reduce_mut(|state| state.auth_token = Some(code.to_string()));
+    if error.is_some() {
+        return html!(error.unwrap());
+    };
 
-                    if state.as_ref().hash != hash {
-                        error.set(Some("Hash mismatch"));
-                    };
-                }
-                (None, Some(_)) => {
-                    let err = url_params.as_ref().unwrap().get("error");
-                    match err {
-                        Some(e) => match e.as_str() {
-                            "access_denied" => error.set(Some(
-                                "You denied access. You've seen too much. I cannot let you continue.",
-                            )),
-                            _ => error.set(Some("un-handled error encountered")),
-                        },
-                        None => error.set(Some("Spotify hasn't provided an error type..")),
-                    }
-                }
-                (Some(_), None) => error.set(Some("No hash returned by Spotify")),
-                (None, None) => error.set(Some("Nothing returned. PANIC PANIC")),
-            }
-        };
-    } else {
-        // check whether access token still within valid time frame.
+    yew::platform::spawn_local(async move {
+        match (
+            url_params.as_ref().unwrap().get("code"),
+            url_params.as_ref().unwrap().get("state"),
+        ) {
+            (Some(code), Some(hash)) => {
+                dispatch
+                    .reduce_future(|state| async move {
+                        let mut state = state.as_ref().clone();
+                        state.auth_token = Some(code);
+                        state.hash = hash;
 
-        let response_json = ResponseForAccessToken {
-            access_token: String::new(),
-            token_type: String::new(),
-            scope: String::new(),
-            expires_in: 0,
-            refresh_token: String::new(),
-        };
+                        log!(format!("{:?}", state));
+                        let request =
+                            gloo_net::http::Request::get("http://localhost:3001/getToken")
+                                .query([("auth_token", state.auth_token.as_ref().unwrap())]);
 
-        match *error {
-            Some(err) => {
-                log! {err};
-                return html! {<p>{err}</p>};
-            }
-            None => {
-                let reponse_json = response_json.clone();
-                spawn_local(async move {
-                    let mut map = HashMap::new();
-                    map.insert("auth_token", state.auth_token.as_ref().unwrap());
+                        let response = request.send().await;
 
-                    // log! {"{:?}", Some(state.auth_token)}
+                        match response {
+                            Ok(response) => {
+                                let token_response: TokenResponse = response
+                                    .json::<TokenResponse>()
+                                    .await
+                                    .expect("Error: parsing token reponse json");
 
-                    dispatch.reduce_mut(|state| state.auth_token = None);
+                                state.logged = true;
+                                state.access_token = Some(token_response.access_token);
+                                state.access_token_recieved = Some(chrono::Utc::now());
+                                state.access_token_expires = Some(
+                                    chrono::Utc::now()
+                                        .checked_add_signed(
+                                            chrono::Duration::from_std(
+                                                std::time::Duration::from_secs(
+                                                    token_response.expires_in,
+                                                ),
+                                            )
+                                            .expect("Out of range"),
+                                        )
+                                        .unwrap(),
+                                );
+                            }
+                            Err(err) => {
+                                let error = Some("Error fetching spotify tokens".to_string());
+                                log!(err.to_string())
+                            }
+                        }
+                        log!("SENT");
 
-                    let req_builder = reqwest::Client::new()
-                        .post("http://localhost:3001")
-                        .json(&map);
-
-                    let response = req_builder.send().await;
-
-                    if response.is_err() {
-                        return;
-                    }
-                    // log! {"Response text {}", &response.text().await.expect("prop with text in calback")};
-
-                    let response_json = response
-                        .unwrap()
-                        .json::<ResponseForAccessToken>()
-                        .await
-                        .expect("error parsing json");
-
-                    log! {"calcing expires in"};
-                    let expires_in = chrono::Duration::from_std(std::time::Duration::from_secs(
-                        response_json.expires_in,
-                    ))
-                    .expect("Out of range");
-
-                    log! {"setting states"};
-                    dispatch.reduce_mut(|state| {
-                        state.access_token = Some(response_json.access_token);
-                        state.access_token_recieved =
-                            Some(expires_in.to_std().expect("Out of range"));
-                        state.access_token_expires =
-                            chrono::Utc::now().checked_add_signed(expires_in);
-                        state.refresh_token = Some(response_json.refresh_token);
+                        Rc::new(state)
                     })
-                });
-                return html! {<p>{format!{"{:#?}", response_json}}</p>};
+                    .await
             }
-        }
-    }
-
-    // log!("{:?}", res);
-
-    html! {<p>{"callback"}</p>}
+            (None, Some(hash)) => todo!(),
+            (Some(code), None) => todo!(),
+            (None, None) => todo!(),
+        };
+    });
+    navigator.push(&crate::Route::Home);
+    html!("fetching tokens")
 }
-
-// async fn resolve_promise(promise: js_sys::Promise) -> anyhow::Result<wasm_bindgen::JsValue> {
-//     wasm_bindgen_futures::JsFuture::from(promise)
-//         .await
-//         .map_err(|err| anyhow::anyhow!("{:?}", err))
-// }
