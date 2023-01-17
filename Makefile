@@ -1,2 +1,2 @@
 all: 
-	cargo run --bin backend & cd yewapp & trunk serve
+	cd backend & cargo run & cd ../yewapp & trunk serve

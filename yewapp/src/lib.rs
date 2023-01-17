@@ -1,20 +1,19 @@
 mod components;
+mod hooks;
 mod pages;
 mod router;
 
-use std::{borrow::BorrowMut, process::exit, time::Duration};
-
 use chrono::{DateTime, Utc};
-use gloo_console::log;
-use rand::{distributions::Alphanumeric, Rng};
-use router::{switch, Route};
-use web_sys::console::log;
+use serde::{Deserialize, Serialize};
 use yew::{functional::*, prelude::*};
 use yew_router::prelude::*;
 use yewdux::prelude::*;
 
-use crate::components::nav::Nav;
-use serde::{Deserialize, Serialize};
+use crate::{
+    components::nav::Nav,
+    hooks::create_hash::create_hash,
+    router::{switch, Route},
+};
 
 #[derive(Default, Clone, PartialEq, Eq, Deserialize, Serialize, Store, Debug)]
 pub struct State {
@@ -28,26 +27,16 @@ pub struct State {
     refresh_token: Option<String>,
 }
 
-pub fn serialize_dt<S>(dt: &Option<DateTime<Utc>>, serializer: S) -> Result<S::Ok, S::Error>
-where
-    S: serde::Serializer,
-{
-    match dt {
-        Some(dt) => chrono::serde::ts_seconds::serialize(dt, serializer),
-        None => serializer.serialize_none(),
-        _ => unreachable!(),
-    }
-}
-
-pub fn create_hash() -> String {
-    log! {"Creating hash"};
-
-    rand::thread_rng()
-        .sample_iter(&Alphanumeric)
-        .take(16)
-        .map(char::from)
-        .collect::<String>()
-}
+// pub fn serialize_dt<S>(dt: &Option<DateTime<Utc>>, serializer: S) -> Result<S::Ok, S::Error>
+// where
+//     S: serde::Serializer,
+// {
+//     match dt {
+//         Some(dt) => chrono::serde::ts_seconds::serialize(dt, serializer),
+//         None => serializer.serialize_none(),
+//         _ => unreachable!(),
+//     }
+// }
 
 #[function_component(App)]
 pub fn app() -> Html {

@@ -76,7 +76,6 @@ pub fn callback() -> Html {
                                 log!(err.to_string())
                             }
                         }
-                        log!("SENT");
 
                         Rc::new(state)
                     })
