@@ -8,6 +8,8 @@ use crate::State;
 #[function_component(Login)]
 pub fn login() -> Html {
     let (state, dispatch) = use_store::<State>();
+    let state_clone = state.clone();
+    use_effect_with_deps(move |_| log!(format!("{:?}", state_clone)), state.clone());
 
     let logged = state.logged;
     // let client_id = store
@@ -30,8 +32,6 @@ pub fn login() -> Html {
             state.hash.clone(),
             scope
         };
-
-        log! {&url};
 
         let _wind = window().location().assign(url.as_str());
 

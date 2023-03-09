@@ -13,6 +13,8 @@ use backend::create_hash;
 use serde::{Deserialize, Serialize};
 use tower_http::cors::{Any, CorsLayer, Origin};
 
+mod endpoints;
+
 struct AppState {
     client_id: String,
     client_secret: String,
@@ -40,7 +42,8 @@ struct AccessTokenError {
 
 #[tokio::main]
 async fn main() {
-    dotenv::dotenv().expect("Couldn't load .env file");
+    // dotenv::dotenv().expect("Couldn't load .env file");
+    dotenv::dotenv().ok();
 
     let shared_state: Arc<AppState> = Arc::new(AppState {
         client_id: std::env::var("CLIENT_ID").expect("Unable to load client id from env"),
@@ -50,6 +53,14 @@ async fn main() {
 
     let app = Router::new()
         .route("/getToken", get(request_access_token))
+        .route(
+            "/getMyProfile",
+            get(endpoints::get_users_profile::get_users_profile),
+        )
+        .route(
+            "/getMyPlaylists",
+            get(endpoints::get_users_playlists::get_users_playlists),
+        )
         .layer(
             CorsLayer::new()
                 .allow_origin(Any)
@@ -62,6 +73,11 @@ async fn main() {
         .serve(app.into_make_service())
         .await
         .unwrap();
+}
+
+async fn test() -> impl IntoResponse {
+    println!("test");
+    "response"
 }
 
 async fn not_auth() -> impl IntoResponse {
@@ -84,7 +100,7 @@ async fn request_access_token(Query(params): Query<AccessTokenRequest>) -> impl 
     let access_token = if params.auth_token.chars().count() > 0 {
         params.auth_token
     } else {
-        return Err(StatusCode::UNPROCESSABLE_ENTITY.into_response());
+        return Err(StatusCode::UNPROCESSABLE_ENTITY.into_response()); //is this necessary?
     };
     let client_id = std::env::var("CLIENT_ID").expect("Could not find client_id env var");
     let client_secret =

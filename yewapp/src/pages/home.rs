@@ -4,5 +4,6 @@ use yew::prelude::*;
 pub fn home() -> Html {
     html! {
             <h1>{"Home"}</h1>
+
     }
 }

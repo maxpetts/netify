@@ -8,7 +8,7 @@ use yew::{function_component, html, Html};
 use yew_router::prelude::use_navigator;
 use yewdux::prelude::use_store;
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
 struct TokenResponse {
     access_token: String,
     // token_type: String, // SHould be enum, Moved to backend
@@ -41,7 +41,6 @@ pub fn callback() -> Html {
                         state.auth_token = Some(code);
                         state.hash = hash;
 
-                        log!(format!("{:?}", state));
                         let request =
                             gloo_net::http::Request::get("http://localhost:3001/getToken")
                                 .query([("auth_token", state.auth_token.as_ref().unwrap())]);

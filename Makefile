@@ -1,2 +1,3 @@
 all: 
-	cd backend & cargo run & cd ../yewapp & trunk serve
+	cd ./backend; cargo run  & \
+	cd ../yewapp; trunk serve --open
