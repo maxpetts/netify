@@ -3,7 +3,7 @@ use gloo_utils::window;
 use yew::prelude::*;
 use yewdux::prelude::*;
 
-use crate::State;
+use crate::{components::atom::button::Button, State};
 
 #[function_component(Login)]
 pub fn login() -> Html {
@@ -39,6 +39,6 @@ pub fn login() -> Html {
     });
 
     html! {
-        <button onclick={log_inout}>{if logged {"Log out"} else {"Log in"}}</button>
+        <Button onclick={log_inout}>{if logged {"Log out"} else {"Log in"}}</Button>
     }
 }
