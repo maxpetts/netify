@@ -1,22 +1,10 @@
 use serde::{Deserialize, Serialize};
-use spotify_types::playlist::FullPlaylist;
+use spotify_types::curr_playing::CurrentlyPlaying;
 use yew::prelude::*;
 use yew_hooks::prelude::*;
 
-/// Paging object
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Default)]
-pub struct Page<T> {
-    pub href: String,
-    pub items: Vec<T>,
-    pub limit: u32,
-    pub next: Option<String>,
-    pub offset: u32,
-    pub previous: Option<String>,
-    pub total: u32,
-}
-
 #[hook]
-pub fn use_get_playlists() -> UseAsyncHandle<Page<FullPlaylist>, std::string::String> {
+pub fn use_get_playing_song() -> UseAsyncHandle<CurrentlyPlaying, String> {
     let navigator = yew_router::prelude::use_navigator().unwrap();
     let state = yewdux::prelude::use_store_value::<crate::State>();
 
@@ -26,13 +14,13 @@ pub fn use_get_playlists() -> UseAsyncHandle<Page<FullPlaylist>, std::string::St
 
     use_async_with_options(
         async move {
-            match gloo_net::http::Request::get("http://localhost:3001/getMyPlaylists")
+            match gloo_net::http::Request::get("http://localhost:3001/getPlayingSong")
                 .query([("access_token", state.access_token.as_ref().unwrap())])
                 .send()
                 .await
             {
                 Ok(response) => Ok(response
-                    .json::<Page<FullPlaylist>>()
+                    .json::<CurrentlyPlaying>()
                     .await
                     .expect("Error: parsing token reponse json")),
 

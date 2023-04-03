@@ -3,7 +3,7 @@ use gloo_utils::window;
 use yew::prelude::*;
 use yewdux::prelude::*;
 
-use crate::State;
+use crate::{components::atom::button::Button, State};
 
 #[function_component(Login)]
 pub fn login() -> Html {
@@ -23,7 +23,8 @@ pub fn login() -> Html {
 
     let log_inout = Callback::from(move |_| {
         let redirect_uri = "http://localhost:8080/callback";
-        let scope = "user-read-private user-read-email";
+        let scope = "user-read-private user-read-email user-read-currently-playing user-modify-playback-state
+        user-read-playback-state user-read-recently-played user-library-modify";
 
         let url = format! {
             "https://accounts.spotify.com/authorize?client_id={}&response_type=code&redirect_uri={}&state={}&scope={}",
@@ -39,6 +40,6 @@ pub fn login() -> Html {
     });
 
     html! {
-        <button onclick={log_inout}>{if logged {"Log out"} else {"Log in"}}</button>
+        <Button onclick={log_inout}>{if logged {"Log out"} else {"Log in"}}</Button>
     }
 }
