@@ -24,5 +24,6 @@ gloo-utils = "0.1.3"
 reqwest = { version = "0.11.11", features = ["blocking", "json"] }
 timer = "0.2.0"
 chrono = { version = "0.4.22", features = [ "serde" ] }
-rspotify-model = {git = "https://github.com/ramsayleung/rspotify/"}
 stylist = {version = "0.11", features = [ "yew_integration" ]}
+spotify-types = { path = "../common/" }
+yew-octicons = "0.4.0"

@@ -23,7 +23,8 @@ pub fn login() -> Html {
 
     let log_inout = Callback::from(move |_| {
         let redirect_uri = "http://localhost:8080/callback";
-        let scope = "user-read-private user-read-email";
+        let scope = "user-read-private user-read-email user-read-currently-playing user-modify-playback-state
+        user-read-playback-state user-read-recently-played user-library-modify";
 
         let url = format! {
             "https://accounts.spotify.com/authorize?client_id={}&response_type=code&redirect_uri={}&state={}&scope={}",

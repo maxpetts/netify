@@ -1,4 +1,6 @@
 use yew::prelude::*;
+use yew_octicons::Icon;
+use yew_octicons::IconKind;
 use yew_router::prelude::*;
 
 use crate::components::atom::button::Button;
@@ -15,10 +17,26 @@ pub fn nav() -> Html {
 
     let navigator = use_navigator().unwrap();
 
-    let oncliche = Callback::from(move |_| navigator.push(&Route::Profile));
+    let homeButton = {
+        let navigator = navigator.clone();
+        let oncliche = Callback::from(move |_| navigator.push(&Route::Home));
+        html! {
+            <Button onclick={oncliche}>{Icon::new(IconKind::Home)}{"Home"}</Button>
+        }
+    };
+
+    let profileButton = {
+        let navigator = navigator.clone();
+        let oncliche = Callback::from(move |_| navigator.push(&Route::Profile));
+        html! {
+            <Button onclick={oncliche}>{Icon::new(IconKind::Person)}{"Profile"}</Button>
+        }
+    };
+
     html!(
         <div class={container}>
-            <Button onclick={oncliche}>{"Profile"}</Button>
+            {homeButton}
+            {profileButton}
             <Login />
         </div>
     )

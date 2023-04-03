@@ -1,19 +1,19 @@
 use axum::{extract::Query, response::IntoResponse, Json};
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
-use spotify_types::{page::Page, playlist::FullPlaylist};
+use spotify_types::curr_playing::CurrentlyPlaying;
 
 #[derive(Deserialize, Serialize, Clone)]
 pub struct Request {
     access_token: String,
 }
 
-pub async fn get_users_playlists(Query(params): Query<Request>) -> impl IntoResponse {
-    println!("get playlists");
+pub async fn get_playing_song(Query(params): Query<Request>) -> impl IntoResponse {
+    println!("get curr song");
 
     let access_token = params.access_token;
 
-    let url = "https://api.spotify.com/v1/me/playlists";
+    let url = "https://api.spotify.com/v1/me/player/currently-playing";
 
     let req_builder = reqwest::Client::new()
         .get(url)
@@ -22,13 +22,16 @@ pub async fn get_users_playlists(Query(params): Query<Request>) -> impl IntoResp
     let res = req_builder
         .send()
         .await
-        .expect("error getting playlists request");
+        .expect("error getting current playing request");
 
     if res.status().is_success() {
         let res_json = res
-            .json::<Page<FullPlaylist>>()
+            .json::<CurrentlyPlaying>()
             .await
-            .expect("error parsing to json");
+            .expect("error parsing current song to json");
+
+        // println!("{:#?}", res.text().await);
+        // let res_json = "";
 
         return Ok((StatusCode::OK, Json(res_json)));
     } else {
