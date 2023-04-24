@@ -13,6 +13,10 @@ pub fn main() {
     mount_to_body(|cx| {
         view! {cx,
             <Router>
+                <nav>
+                    <A href="">"Home"</A>
+                    <A href="me">"Profile"</A>
+                </nav>
                 <main>
                     <Routes>
                         <Route path="/" view=|cx| view!{cx, <Home/>} />
