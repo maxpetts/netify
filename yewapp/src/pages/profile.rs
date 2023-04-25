@@ -1,4 +1,4 @@
-use crate::components::profile_badge::ProfileBadge;
+use crate::components::{organisms::playlist::Playlist, profile_badge::ProfileBadge};
 use yew::prelude::*;
 
 #[function_component(Profile)]
@@ -26,7 +26,8 @@ pub fn profile() -> Html {
             html!(
                 <>
                     {playlists.items.iter().map(|playlist| {
-                        html!({playlist.name.clone()})
+                        // html!({playlist.name.clone()})
+                        html!(<Playlist playlist={playlist.to_owned()}/>)
                     }).collect::<Html>()}
                 </>)
             } else {

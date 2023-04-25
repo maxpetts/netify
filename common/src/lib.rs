@@ -10,3 +10,8 @@ pub mod playlist;
 pub mod show;
 pub mod track;
 pub mod user;
+
+trait Playable {
+    fn play(&self);
+    fn seek_and_play(&self, position_ms: u32);
+}

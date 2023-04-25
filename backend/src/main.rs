@@ -65,6 +65,10 @@ async fn main() {
             "/getPlayingSong",
             get(endpoints::get_playing_song::get_playing_song),
         )
+        .route(
+            "/togglePlay",
+            get(endpoints::toggle_playback::toggle_playback),
+        )
         .layer(
             CorsLayer::new()
                 .allow_origin(Any)

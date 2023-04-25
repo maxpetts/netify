@@ -27,7 +27,10 @@ pub fn use_get_playlists() -> UseAsyncHandle<Page<FullPlaylist>, std::string::St
     use_async_with_options(
         async move {
             match gloo_net::http::Request::get("http://localhost:3001/getMyPlaylists")
-                .query([("access_token", state.access_token.as_ref().unwrap())])
+                .query([(
+                    "access_token",
+                    state.access_token.as_ref().expect("no access_token"),
+                )])
                 .send()
                 .await
             {

@@ -8,8 +8,8 @@ use crate::{components::atom::button::Button, State};
 #[function_component(Login)]
 pub fn login() -> Html {
     let (state, dispatch) = use_store::<State>();
-    let state_clone = state.clone();
-    use_effect_with_deps(move |_| log!(format!("{:?}", state_clone)), state.clone());
+    // let state_clone = state.clone();
+    // use_effect_with_deps(move |_| log!(format!("{:?}", state_clone)), state.clone());
 
     let logged = state.logged;
     // let client_id = store

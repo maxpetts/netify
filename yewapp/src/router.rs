@@ -1,7 +1,8 @@
 use crate::{
-    components::login::Login,
+    components::{login::Login, nav::Nav},
     pages::{callback::Callback, home::Home, profile::Profile},
-};use yew::prelude::*;
+};
+use yew::prelude::*;
 use yew_router::prelude::*;
 
 #[derive(Clone, Routable, PartialEq)]
@@ -20,7 +21,8 @@ pub enum Route {
 }
 
 pub fn switch(routes: Route) -> Html {
-    match routes {
+    html! {<><Nav/>
+    {match routes {
         Route::Home => html! { <Home /> },
         Route::Profile => {
             html! { <Profile/> }
@@ -32,5 +34,5 @@ pub fn switch(routes: Route) -> Html {
             html! {<Login/> }
         }
         Route::NotFound => html! {{"404"}},
-    }
+    }}</>}
 }

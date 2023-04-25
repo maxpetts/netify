@@ -8,16 +8,16 @@ use crate::{components::login::Login, router::Route};
 
 #[function_component(Nav)]
 pub fn nav() -> Html {
-    let container = stylist::style!(
-        r#"
-        background-color: #dfd;
-        "#
-    )
-    .expect("err in container style");
+    // let container = stylist::style!(
+    //     r#"
+    //     background-color: #dfd;
+    //     "#
+    // )
+    // .expect("err in container style");
 
     let navigator = use_navigator().unwrap();
 
-    let homeButton = {
+    let home_button = {
         let navigator = navigator.clone();
         let oncliche = Callback::from(move |_| navigator.push(&Route::Home));
         html! {
@@ -25,7 +25,7 @@ pub fn nav() -> Html {
         }
     };
 
-    let profileButton = {
+    let profile_button = {
         let navigator = navigator.clone();
         let oncliche = Callback::from(move |_| navigator.push(&Route::Profile));
         html! {
@@ -34,9 +34,9 @@ pub fn nav() -> Html {
     };
 
     html!(
-        <div class={container}>
-            {homeButton}
-            {profileButton}
+        <div>
+            {home_button}
+            {profile_button}
             <Login />
         </div>
     )
